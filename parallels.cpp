@@ -11,25 +11,21 @@
 using namespace std;
 
 /*
- * Метод получения "псевдо-случайного" 64-битного числа
+ * Метод получения "псевдо-случайного" 128-битного числа
  */
 unsigned long long getRand() {
-	return ((((rand() << 15) + rand()) << 15) + rand()) << 15 + rand();
+	return ((((((((uint64_t) rand() << 15) + rand()) << 15) + rand()) << 15) + rand()) << 15) + rand();
 }
 
 
 /*
  * Поиск большого простого числа с помощью теста Миллера-Рабина 
  */
-void findPrimeNumber(int thread) {
-	// TODO посмотреть другой генератор псевдо-случайных чисел
-	mt19937 generator(getRand());
+void findPrimeNumber(int thread, mt19937& generator) {
 	uniform_int_distribution<unsigned long long> distribution(0, 0xFFFFFFFFFFFFFFFF);
-
 	unsigned long long randomNumber, count = 0;
 	do {
-		randomNumber = getRand();
-		//randomNumber = distribution(generator);
+		randomNumber = distribution(generator);
 		count++;
 	} while (!miller_rabin(randomNumber, 2));
 
@@ -45,10 +41,11 @@ void findPrimeNumber(int thread) {
  */
 void workWithoutThreads(int n = 100) {
 	clock_t start, end;
-
+	mt19937 generator(getRand());
+	
 	start = clock();
 	for (int i = 0; i < n; i++) {
-		findPrimeNumber(0);
+		findPrimeNumber(0, generator);
 	}
 	end = clock();
 
@@ -71,8 +68,10 @@ struct Param {
  */
 DWORD WINAPI asyncFindPrime(LPVOID lpParam) {
 	Param* param = (Param*)lpParam;
+	mt19937 generator((unsigned long long) getRand() >> param->numberOfThread);
+	
 	for (int i = 0; i < param->n; i++)
-		findPrimeNumber(param->numberOfThread);
+		findPrimeNumber(param->numberOfThread, generator);
 
 	cout << "Thread " << param->numberOfThread << " complete!" << endl;
 	return 0;
