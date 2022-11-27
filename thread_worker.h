@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <random>
+#include <ctime>
 #include <Windows.h>
 
 #define MAX_NUMBER_OF_THREADS 32
